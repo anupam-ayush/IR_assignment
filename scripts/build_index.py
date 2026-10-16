@@ -82,7 +82,7 @@ def main():
         }
 
     ReportGenerator.write_json(args.report, metrics_data)
-    print(f"[✓] Index successfully built in {args.output}")
+    print(f"[OK] Index successfully built in {args.output}")
     print(f"    Total Docs: {metrics_data['total_docs']}, Vocab: {metrics_data['vocab_size']}")
     print(f"    Time: {metrics_data['build_time_seconds']}s")
     print(f"    Report saved to {args.report}")

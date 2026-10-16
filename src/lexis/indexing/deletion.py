@@ -54,5 +54,5 @@ class DeletionManager:
                     if self.index.dictionary.contains(term):
                         del self.index.dictionary.terms[term]
 
-        self.index.document_registry.deleted_doc_ids.clear()
+        self.index.document_registry.purge_deleted()
         self.index.save(target_dir)

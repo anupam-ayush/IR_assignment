@@ -73,7 +73,7 @@ def main():
 
     fieldnames = ["misspelled", "expected", "suggested", "correct"]
     ReportGenerator.write_csv(args.output, fieldnames, rows)
-    print(f"[✓] Misspelling results saved to {args.output}")
+    print(f"[OK] Misspelling results saved to {args.output}")
 
 
 if __name__ == "__main__":

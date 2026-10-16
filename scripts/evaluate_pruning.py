@@ -101,7 +101,7 @@ def main():
         "top_10_results",
     ]
     ReportGenerator.write_csv(args.output, fieldnames, rows)
-    print(f"\n[✓] Pruning benchmark results saved to {args.output}")
+    print(f"\n[OK] Pruning benchmark results saved to {args.output}")
 
 
 if __name__ == "__main__":

@@ -74,7 +74,7 @@ def main():
 
     fieldnames = list(rows[0].keys()) if rows else []
     ReportGenerator.write_csv(args.output, fieldnames, rows)
-    print(f"[✓] Full Boolean report saved to {args.output}")
+    print(f"[OK] Full Boolean report saved to {args.output}")
 
 
 if __name__ == "__main__":

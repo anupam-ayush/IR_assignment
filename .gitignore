@@ -9,3 +9,5 @@ data/
 *.docx
 .vscode/
 .idea/
+.venv/
+*.egg-info/

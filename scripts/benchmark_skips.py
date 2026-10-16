@@ -103,7 +103,7 @@ def main():
         "time_skip_ms",
     ]
     ReportGenerator.write_csv(args.output, fieldnames, rows)
-    print(f"\n[✓] Skip pointers benchmark results saved to {args.output}")
+    print(f"\n[OK] Skip pointers benchmark results saved to {args.output}")
 
 
 if __name__ == "__main__":

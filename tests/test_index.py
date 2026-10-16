@@ -48,16 +48,16 @@ def test_index_save_and_load():
 
 
 def test_skip_pointers_intersection():
-    p1 = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
-    p2 = [3, 7, 11, 15, 19]
+    p1 = list(range(1, 21))
+    p2 = [4, 8, 12, 16, 20]
 
     # Without skips
     res_no_skip, stats_no_skip = intersect_without_skips(p1, p2)
-    assert res_no_skip == [3, 7, 11, 15, 19]
+    assert res_no_skip == [4, 8, 12, 16, 20]
 
     # With skips
     res_skip, stats_skip = intersect_with_skips(p1, p2, spacing1=3, spacing2=3)
-    assert res_skip == [3, 7, 11, 15, 19]
+    assert res_skip == [4, 8, 12, 16, 20]
     assert stats_skip.skips_taken >= 1
 
 

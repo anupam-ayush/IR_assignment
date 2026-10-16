@@ -24,6 +24,12 @@ class PositionalIndex:
         if term not in self._postings_cache:
             self._postings_cache[term] = PostingsList(term=term)
         self._postings_cache[term].add_occurrence(doc_id, position, zone)
+        plist = self._postings_cache[term]
+        self.dictionary.add_or_update(
+            term=term,
+            doc_frequency=plist.doc_frequency,
+            total_tf=sum(p.tf for p in plist.postings),
+        )
 
     def get_postings(self, term: str) -> Optional[PostingsList]:
         """Fetch the postings list for a term.
@@ -133,4 +139,6 @@ class PositionalIndex:
         return self.document_registry.active_doc_count()
 
     def vocabulary(self) -> List[str]:
+        if self._postings_cache:
+            return sorted(set(self.dictionary.vocabulary()).union(self._postings_cache.keys()))
         return self.dictionary.vocabulary()

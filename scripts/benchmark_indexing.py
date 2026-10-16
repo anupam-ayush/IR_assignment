@@ -130,7 +130,7 @@ def main():
         "speedup",
     ]
     ReportGenerator.write_csv(args.output, fieldnames, rows)
-    print(f"\n[✓] Indexing benchmark results saved to {args.output}")
+    print(f"\n[OK] Indexing benchmark results saved to {args.output}")
 
 
 if __name__ == "__main__":

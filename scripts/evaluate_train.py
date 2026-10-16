@@ -73,13 +73,15 @@ def main():
     print(f"[*] Loaded {len(queries)} queries and qrels for {len(rel_docs_map)} queries.")
 
     # Configurations:
-    # 1. raw-TF baseline: use_idf=False, use_zones=False, use_length_norm=False, use_log_tf=False
-    # 2. tf-idf baseline: use_idf=True, use_zones=False, use_length_norm=True, use_log_tf=True
-    # 3. full system: use_idf=True, use_zones=True, use_length_norm=True, use_log_tf=True
+    # 1. boolean_system: unranked / coordination-level Boolean retrieval
+    # 2. raw-TF baseline: use_idf=False, use_zones=False, use_length_norm=False, use_log_tf=False
+    # 3. tf-idf baseline: use_idf=True, use_zones=False, use_length_norm=True, use_log_tf=True
+    # 4. full system: use_idf=True, use_zones=True, use_length_norm=True, use_log_tf=True
     configs = [
-        ("raw_tf_baseline", False, False, False, False),
-        ("tfidf_baseline", True, False, True, True),
-        ("full_system", True, True, True, True),
+        ("boolean_system", None),
+        ("raw_tf_baseline", (False, False, False, False)),
+        ("tfidf_baseline", (True, False, True, True)),
+        ("full_system", (True, True, True, True)),
     ]
 
     metric_rows = []
@@ -89,31 +91,54 @@ def main():
     print("TRAINING EVALUATION RESULTS")
     print("=" * 80)
 
-    for cfg_name, use_idf, use_zones, use_norm, use_log_tf in configs:
-        scorer = RankedScorer(
-            index=index,
-            tokenizer=tokenizer,
-            use_idf=use_idf,
-            use_zones=use_zones,
-            use_length_norm=use_norm,
-            use_log_tf=use_log_tf,
-        )
+    from collections import Counter
 
+    for cfg_name, params in configs:
         query_retrievals: Dict[str, List[str]] = {}
         p10_list = []
         ndcg10_list = []
 
-        for qid, q_text in queries.items():
-            results, _, _ = scorer.score_query(q_text, top_k=100)
-            ret_doc_names = [r.doc_name for r in results]
-            query_retrievals[qid] = ret_doc_names
+        if cfg_name == "boolean_system":
+            for qid, q_text in queries.items():
+                terms = tokenizer.tokenize_terms(q_text)
+                matching_docs = Counter()
+                for t in set(terms):
+                    plist = index.get_postings(t)
+                    if plist:
+                        for did in plist.doc_ids():
+                            if not index.document_registry.is_deleted(did):
+                                matching_docs[did] += 1
+                ranked_docs = sorted(matching_docs.items(), key=lambda x: (-x[1], index.get_doc_name(x[0]) or ""))
+                ret_doc_names = [index.get_doc_name(did) for did, _ in ranked_docs[:100] if index.get_doc_name(did)]
+                query_retrievals[qid] = ret_doc_names
 
-            rel_docs = rel_docs_map.get(qid, set())
-            p10 = RankingMetrics.precision_at_k(ret_doc_names, rel_docs, k=10)
-            ndcg10 = RankingMetrics.ndcg_at_k(ret_doc_names, grades_map.get(qid, {}), k=10)
+                rel_docs = rel_docs_map.get(qid, set())
+                p10 = RankingMetrics.precision_at_k(ret_doc_names, rel_docs, k=10)
+                ndcg10 = RankingMetrics.ndcg_at_k(ret_doc_names, grades_map.get(qid, {}), k=10)
+                p10_list.append(p10)
+                ndcg10_list.append(ndcg10)
+        else:
+            use_idf, use_zones, use_norm, use_log_tf = params
+            scorer = RankedScorer(
+                index=index,
+                tokenizer=tokenizer,
+                use_idf=use_idf,
+                use_zones=use_zones,
+                use_length_norm=use_norm,
+                use_log_tf=use_log_tf,
+            )
 
-            p10_list.append(p10)
-            ndcg10_list.append(ndcg10)
+            for qid, q_text in queries.items():
+                results, _, _ = scorer.score_query(q_text, top_k=100)
+                ret_doc_names = [r.doc_name for r in results]
+                query_retrievals[qid] = ret_doc_names
+
+                rel_docs = rel_docs_map.get(qid, set())
+                p10 = RankingMetrics.precision_at_k(ret_doc_names, rel_docs, k=10)
+                ndcg10 = RankingMetrics.ndcg_at_k(ret_doc_names, grades_map.get(qid, {}), k=10)
+
+                p10_list.append(p10)
+                ndcg10_list.append(ndcg10)
 
         mean_p10 = sum(p10_list) / max(1, len(p10_list))
         mean_ndcg10 = sum(ndcg10_list) / max(1, len(ndcg10_list))
@@ -141,8 +166,8 @@ def main():
     if pr_rows:
         ReportGenerator.write_csv(args.pr_output, ["recall_level", "interpolated_precision"], pr_rows)
 
-    print(f"\n[✓] Training metrics saved to {args.output}")
-    print(f"[✓] 11-point PR curve saved to {args.pr_output}")
+    print(f"\n[OK] Training metrics saved to {args.output}")
+    print(f"[OK] 11-point PR curve saved to {args.pr_output}")
 
 
 if __name__ == "__main__":

@@ -102,8 +102,13 @@ class BSBIIndexer:
         final_index = PositionalIndex(str(out_path))
         final_index.document_registry = registry
 
-        # Group and merge tuples from all blocks
-        blocks_data = [BlockWriter.read_bsbi_block(bf) for bf in block_files]
+        # Group and merge tuples from all blocks efficiently in O(N)
+        from collections import defaultdict
+        tid_to_entries: Dict[int, List[Tuple[int, int, str]]] = defaultdict(list)
+        for bf in block_files:
+            for tid, did, pos, zone in BlockWriter.read_bsbi_block(bf):
+                tid_to_entries[tid].append((did, pos, zone))
+
         all_tids = sorted(term_to_id.values())
 
         out_path.mkdir(parents=True, exist_ok=True)
@@ -115,12 +120,13 @@ class BSBIIndexer:
         with open(postings_path, "wb") as pf:
             for tid in all_tids:
                 term = id_to_term[tid]
+                entries = tid_to_entries.get(tid)
+                if not entries:
+                    continue
                 plist = PostingsList(term=term)
-                # Gather occurrences
-                for b in blocks_data:
-                    for entry in b:
-                        if entry[0] == tid:
-                            plist.add_occurrence(doc_id=entry[1], position=entry[2], zone=entry[3])
+                entries.sort(key=lambda x: x[0])
+                for did, pos, zone in entries:
+                    plist.add_occurrence(doc_id=did, position=pos, zone=zone)
 
                 if plist.postings:
                     serialized = json.dumps(plist.to_dict()).encode("utf-8")

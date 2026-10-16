@@ -56,6 +56,17 @@ class DocumentRegistry:
     def total_doc_count(self) -> int:
         return len(self.doc_id_to_name)
 
+    def purge_deleted(self):
+        """Physically remove deleted documents from registry mappings."""
+        for doc_id in list(self.deleted_doc_ids):
+            name = self.doc_id_to_name.pop(doc_id, None)
+            if name and name in self.name_to_doc_id:
+                del self.name_to_doc_id[name]
+            self.doc_lengths.pop(doc_id, None)
+            self.title_lengths.pop(doc_id, None)
+            self.body_lengths.pop(doc_id, None)
+        self.deleted_doc_ids.clear()
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "doc_id_to_name": {str(k): v for k, v in self.doc_id_to_name.items()},

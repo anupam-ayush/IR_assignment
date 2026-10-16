@@ -99,7 +99,7 @@ def main():
 
     fieldnames = ["term_group", "scheme", "bytes", "compression_ratio", "space_saving_pct"]
     ReportGenerator.write_csv(args.output, fieldnames, rows)
-    print(f"\n[✓] Compression benchmark saved to {args.output}")
+    print(f"\n[OK] Compression benchmark saved to {args.output}")
 
 
 if __name__ == "__main__":

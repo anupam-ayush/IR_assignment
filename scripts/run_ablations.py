@@ -164,7 +164,7 @@ def main():
     print("=" * 80)
     fieldnames = ["configuration", "map", "delta_map", "p_value", "statistically_significant_05"]
     ReportGenerator.write_csv(args.output, fieldnames, rows)
-    print(f"\n[✓] Ablation results saved to {args.output}")
+    print(f"\n[OK] Ablation results saved to {args.output}")
 
 
 if __name__ == "__main__":
